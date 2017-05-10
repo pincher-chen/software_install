@@ -1,6 +1,8 @@
 # 1.Folder structure
 ```
-tree 
+$pwd
+~/sf_box/vasp.5.4.4
+$ tree 
 .
 |-- README
 |-- arch
