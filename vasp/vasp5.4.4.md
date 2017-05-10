@@ -233,3 +233,22 @@ intel-compilers/13.0.0 intel-compilers/15.0.1 intel-compilers/mkl-15
 $ module load intel-compilers/mkl-14 # important when run vasp
 $ make all  # waiting for serival minutes
 ```
+```
+$ ls build/   # new source code
+gam  ncl  std
+$ ls bin   # new execute    
+vasp_gam  vasp_ncl  vasp_std
+```
+
+# 3.submit job
+```
+$ pwd
+/HOME/thu_sz_jiali_1/sf_box/vasp.5.4.4/bin
+$ export PATH=$PWD:$PATH
+$ which vasp_std
+~/sf_box/vasp.5.4.4/bin/vasp_std
+
+$cd 2_1_fccSi 
+yhrun -N 1 -n 16 vasp_std
+
+```
