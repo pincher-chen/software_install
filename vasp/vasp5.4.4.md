@@ -244,7 +244,7 @@ vasp_gam  vasp_ncl  vasp_std
 # 3.submit job
 ```
 $ pwd
-/HOME/thu_sz_jiali_1/sf_box/vasp.5.4.4/bin
+~/sf_box/vasp.5.4.4/bin
 $ export PATH=$PWD:$PATH
 $ which vasp_std
 ~/sf_box/vasp.5.4.4/bin/vasp_std
