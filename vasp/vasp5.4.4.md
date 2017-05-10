@@ -251,5 +251,53 @@ $ which vasp_std
 
 $cd 2_1_fccSi 
 yhrun -N 1 -n 16 vasp_std
+yhrun: job 531349 queued and waiting for resources
+yhrun: job 531349 has been allocated resources
+ running on   16 total cores
+ distrk:  each k-point on   16 cores,    1 groups
+ distr:  one band on    1 cores,   16 groups
+ using from now: INCAR     
+ vasp.5.4.4.18Apr17-6-g9f103f2a35 (build May 10 2017 14:56:12) complex          
+  
+ POSCAR found :  1 types and       1 ions
+ scaLAPACK will be used
+
+ ----------------------------------------------------------------------------- 
+|                                                                             |
+|           W    W    AA    RRRRR   N    N  II  N    N   GGGG   !!!           |
+|           W    W   A  A   R    R  NN   N  II  NN   N  G    G  !!!           |
+|           W    W  A    A  R    R  N N  N  II  N N  N  G       !!!           |
+|           W WW W  AAAAAA  RRRRR   N  N N  II  N  N N  G  GGG   !            |
+|           WW  WW  A    A  R   R   N   NN  II  N   NN  G    G                |
+|           W    W  A    A  R    R  N    N  II  N    N   GGGG   !!!           |
+|                                                                             |
+|      For optimal performance we recommend to set                            |
+|        NCORE= 4 - approx SQRT( number of cores)                             |
+|      NCORE specifies how many cores store one orbital (NPAR=cpu/NCORE).     |
+|      This setting can  greatly improve the performance of VASP for DFT.     |
+|      The default,   NCORE=1            might be grossly inefficient         |
+|      on modern multi-core architectures or massively parallel machines.     |
+|      Do your own testing !!!!                                               |
+|      Unfortunately you need to use the default for GW and RPA calculations. |
+|      (for HF NCORE is supported but not extensively tested yet)             |
+|                                                                             |
+ ----------------------------------------------------------------------------- 
+
+ LDA part: xc-table for Pade appr. of Perdew
+ POSCAR, INCAR and KPOINTS ok, starting setup
+ FFT: planning ...
+ WAVECAR not read
+ entering main loop
+       N       E                     dE             d eps       ncg     rms          rms(c)
+DAV:   1    -0.467365249896E+01   -0.46737E+01   -0.12237E+03  2464   0.107E+02
+DAV:   2    -0.489746050282E+01   -0.22381E+00   -0.22286E+00  2352   0.546E+00
+DAV:   3    -0.489751186642E+01   -0.51364E-04   -0.51363E-04  2512   0.759E-02
+DAV:   4    -0.489751186947E+01   -0.30509E-08   -0.27338E-08  2496   0.417E-04
+DAV:   5    -0.489751186905E+01    0.42354E-09    0.73090E-14  2288   0.416E-07    0.760E-01
+DAV:   6    -0.488468208243E+01    0.12830E-01   -0.40823E-03  1920   0.138E-01    0.453E-01
+DAV:   7    -0.487740279192E+01    0.72793E-02   -0.89223E-03  2016   0.204E-01    0.253E-02
+DAV:   8    -0.487738469131E+01    0.18101E-04   -0.19647E-05  1872   0.132E-02
+   1 F= -.48773847E+01 E0= -.48758538E+01  d E =-.306175E-02
+ writing wavefunctions
 
 ```
