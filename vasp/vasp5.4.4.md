@@ -250,7 +250,11 @@ $ which vasp_std
 ~/sf_box/vasp.5.4.4/bin/vasp_std
 
 $cd 2_1_fccSi 
-yhrun -N 1 -n 16 vasp_std
+$ module list # check module environment
+Currently Loaded Modulefiles:
+  1) intel-compilers/mkl-14
+  
+$ yhrun -N 1 -n 16 vasp_std
 yhrun: job 531349 queued and waiting for resources
 yhrun: job 531349 has been allocated resources
  running on   16 total cores
@@ -300,4 +304,11 @@ DAV:   8    -0.487738469131E+01    0.18101E-04   -0.19647E-05  1872   0.132E-02
    1 F= -.48773847E+01 E0= -.48758538E+01  d E =-.306175E-02
  writing wavefunctions
 
+```
+
+```
+$ vi run_job.sh
+#!/bin/sh
+yhrun -N 1 -n 16 vasp_std
+$ yhbatch -N 1 run_job.sh # submit your job by yhbatch
 ```
