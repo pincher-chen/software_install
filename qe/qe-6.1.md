@@ -8,7 +8,7 @@ clib       Doc                    include  Makefile    pseudo  TDDFPT
 configure  environment_variables  install  Modules     PW      upftools
 COUPLE     EPW                    LAXlib   NEB         PWCOND  XSpectra
 ```
-# Compile
+# 2.Compile
 ```
 $module load intel-compilers/15.0.1
 $module load MPI/Intel/MPICH/3.1-icc15-dyn  
@@ -23,7 +23,7 @@ $./configure --prefix="/WORK/app/Quantum_Espresso/6.1_MPI" --enable-parallel --e
 $make all
 $make install
 ```
-# submit job
+# 3.submit job
 
 ## by yhrun
 ```
