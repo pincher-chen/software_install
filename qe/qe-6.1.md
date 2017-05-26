@@ -24,11 +24,12 @@ $make all
 $make install
 ```
 # submit job
+
+## by yhrun
 ```
 $pwd
 ~/AUSURF112
 $ yhrun -N 1 -n 24 pw.x -in ausurf.in
-$ yhrun -N 1 -n 24 pw.x -in ausurf.in 
 
      Program PWSCF v.6.1 (svn rev. 13369) starts on 26May2017 at 16:25:47 
 
@@ -237,3 +238,12 @@ $ yhrun -N 1 -n 24 pw.x -in ausurf.in
 
      Smooth grid:   763307 G-vectors     FFT dimensions: ( 125,  64, 200)
      ```
+## by yhbatch
+```
+$touch run_job.sh
+$vi run_job.sh
+#/bin/sh
+yhrun -N 1 -n 24 pw.x -in ausurf.in
+
+$yhbatch -N 1 run_job.sh
+```
