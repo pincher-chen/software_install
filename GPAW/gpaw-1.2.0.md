@@ -24,8 +24,8 @@ Successfully installed gpaw-1.2.0
 # 2. how to run 
 We recommand user to use local gpaw
 ```
-module load GPAW/1.2.0              #add relevant envirment;
-source /WORK/app/toolshs/setproxy.sh 12.10.133.131  #connect to network
+$ module load GPAW/1.2.0              #add relevant envirment;
+$ source /WORK/app/toolshs/setproxy.sh 12.10.133.131  #connect to network
 $ pip install --upgrade --user gpaw
 Collecting gpaw
   Downloading gpaw-1.2.0.tar.gz (1.2MB)
