@@ -46,3 +46,40 @@ build                 LICENSE    thirdorder_common.py  thirdorder_core.so
 compile.sh            README.md  thirdorder_core.c     thirdorder_espresso.py
 cthirdorder_core.pxd  setup.py   thirdorder_core.pyx   thirdorder_vasp.py
 ```
+# 2. Running
+```
+$ mkdir test;cd test
+$ cp /WORK/app/share/vasp_makefile/2_1_fccSi.tgz .
+$ tar xzvf 2_1_fccSi.tgz
+$ cd 2_1_fccSi
+$ ../../thirdorder_vasp.py sow 3 3 2 -1
+Reading POSCAR
+Analyzing the symmetries
+- Symmetry group Fm-3m detected
+- 48 symmetry operations
+Creating the supercell
+Computing all distances in the supercell
+- Automatic cutoff: 0.332885822331 nm
+Looking for an irreducible set of third-order IFCs
+- 3 triplet equivalence classes found
+- 32 DFT runs are needed
+
+.d88888b   .88888.  dP   dP   dP
+88.    "' d8'   `8b 88   88   88
+`Y88888b. 88     88 88  .8P  .8P
+      `8b 88     88 88  d8'  d8'
+d8'   .8P Y8.   .8P 88.d8P8.d8P
+ Y88888P   `8888P'  8888' Y88'
+ooooooooooooooooooooooooooooooooo
+
+Writing undisplaced coordinates to 3RD.SPOSCAR
+Writing displaced coordinates to 3RD.POSCAR.*
+
+888888ba   .88888.  888888ba   88888888b
+88    `8b d8'   `8b 88    `8b  88
+88     88 88     88 88     88 a88aaaa
+88     88 88     88 88     88  88
+88    .8P Y8.   .8P 88     88  88
+8888888P   `8888P'  dP     dP  88888888P
+ooooooooooooooooooooooooooooooooooooooooo
+```
