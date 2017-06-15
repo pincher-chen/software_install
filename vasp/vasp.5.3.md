@@ -227,9 +227,9 @@ SCA=$(MKL_lib_PATH)/libmkl_scalapack_lp64.a $(MKL_lib_PATH)/libmkl_blacs_intelmp
 # libraries for mpi
 #-----------------------------------------------------------------------
 
-#LIB     = -L../vasp.5.lib -ldmy  \
-#      ../vasp.5.lib/linpack_double.o $(LAPACK) \
-#      $(SCA) $(BLAS)
+LIB     = -L../vasp.5.lib -ldmy  \
+      ../vasp.5.lib/linpack_double.o $(LAPACK) \
+      $(SCA) $(BLAS)
 
 # FFT: fftmpi.o with fft3dlib of Juergen Furthmueller
 #FFT3D   = fftmpi.o fftmpi_map.o fft3dfurth.o fft3dlib.o 
