@@ -1,4 +1,4 @@
-# How to compile
+# 1.How to compile
 ```
 $ cd gromacs-5.1.4
 $ mkdir build
@@ -64,7 +64,7 @@ gmx-completion-gmx_mpi.bash  GMXRC.bash  xplor2gmx.pl
 ```
 Finshed.
 
-# How to run
+# 2.How to run
 ```
 $ module load gromacs/5.1.4
 $ which gmx_mpi
