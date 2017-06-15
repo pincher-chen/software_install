@@ -70,7 +70,9 @@ $ module load gromacs/5.1.4
 $ which gmx_mpi
 /WORK/app/gromacs/5.1.4-single-avx-256/bin/gmx_mpi
 $ cd ~/../villin/villin_vsites
+```
 ## run by yhrun
+```
 $ yhrun -n 8 gmx_mpi mdrun -ntomp 1 -deffnm pme 
                    :-) GROMACS - gmx mdrun, VERSION 5.1.4 (-:
 
