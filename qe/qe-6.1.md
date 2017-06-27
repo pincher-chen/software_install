@@ -237,7 +237,7 @@ $ yhrun -N 1 -n 24 pw.x -in ausurf.in
      Dense  grid:  2158381 G-vectors     FFT dimensions: ( 180,  90, 288)
 
      Smooth grid:   763307 G-vectors     FFT dimensions: ( 125,  64, 200)
-     ```
+```
 ## by yhbatch
 
 ```
