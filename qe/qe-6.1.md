@@ -239,6 +239,7 @@ $ yhrun -N 1 -n 24 pw.x -in ausurf.in
      Smooth grid:   763307 G-vectors     FFT dimensions: ( 125,  64, 200)
      ```
 ## by yhbatch
+
 ```
 $touch run_job.sh
 $vi run_job.sh
