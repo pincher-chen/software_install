@@ -79,7 +79,7 @@ CPP_ =  ./preprocess <$*.F | /usr/bin/cpp -P -C -traditional >$*$(SUFFIX)
 # this release should be fpp clean
 # we now recommend fpp as preprocessor
 # if this fails go back to cpp
-#CPP_=fpp -f_com=no -free -w0 $*.F $*$(SUFFIX) 
+CPP_=fpp -f_com=no -free -w0 $*.F $*$(SUFFIX) 
 
 #-----------------------------------------------------------------------
 # possible options for CPP:
@@ -103,7 +103,8 @@ CPP_ =  ./preprocess <$*.F | /usr/bin/cpp -P -C -traditional >$*$(SUFFIX)
 # the WAVECAR file becomes huge
 #-----------------------------------------------------------------------
 
-FFLAGS =  -FR -lowercase -assume byterecl 
+#FFLAGS =  -FR -lowercase -assume byterecl 
+FFLAGS =  -FR -assume byterecl 
 
 #-----------------------------------------------------------------------
 # optimization
