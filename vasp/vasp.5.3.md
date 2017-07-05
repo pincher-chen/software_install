@@ -110,7 +110,7 @@ CPP_ =  ./preprocess <$*.F | /usr/bin/cpp -P -C -traditional >$*$(SUFFIX)
 # the WAVECAR file becomes huge
 #-----------------------------------------------------------------------
 
-FFLAGS =  -FR -names lowercase -assume byterecl
+FFLAGS =  -FR -names lowercase -assume byterecl 
 
 #-----------------------------------------------------------------------
 # optimization
@@ -125,8 +125,12 @@ FFLAGS =  -FR -names lowercase -assume byterecl
 #-----------------------------------------------------------------------
 
 # ifc.9.1, ifc.10.1 recommended
-OFLAG=-O2 -ip
+OFLAG=-O2 -ip  
 
+OFLAG_HIGH = $(OFLAG)
+OBJ_HIGH = 
+OBJ_NOOPT = 
+DEBUG  = -FR -O0
 INLINE = $(OFLAG)
 
 #-----------------------------------------------------------------------
@@ -143,6 +147,9 @@ INLINE = $(OFLAG)
 
 #MKL_FFTW_PATH=$(MKLROOT)/interfaces/fftw3xf/
 
+# BLAS
+# setting -DRPROMU_DGEMV  -DRACCMU_DGEMV in the CPP lines usually speeds up program execution
+# BLAS= -Wl,--start-group $(MKL_PATH)/libmkl_intel_lp64.a $(MKL_PATH)/libmkl_intel_thread.a $(MKL_PATH)/libmkl_core.a -Wl,--end-group -lguide 
 # faster linking and available from at least version 11
 #BLAS= -lguide  -mkl 
 
@@ -159,6 +166,7 @@ INLINE = $(OFLAG)
 # also needs a special line for LAPACK
 # this is the best thing you can do on AMD based systems !!!!!!
 
+#BLAS =  -Wl,--start-group /opt/libs/libgoto/libgoto.so $(MKL_PATH)/libmkl_intel_thread.a $(MKL_PATH)/libmkl_core.a -Wl,--end-group  -liomp5
 #LAPACK= /opt/libs/libgoto/libgoto.so $(MKL_PATH)/libmkl_intel_lp64.a
 
 #-----------------------------------------------------------------------
@@ -226,70 +234,110 @@ CPP    = $(CPP_) -DMPI  -DHOST=\"LinuxIFC\" -DIFC \
 # location of SCALAPACK
 # if you do not use SCALAPACK simply leave this section commented out
 #-----------------------------------------------------------------------
+
+# usually simplest link in mkl scaLAPACK
 #BLACS= -lmkl_blacs_openmpi_lp64
 #SCA= $(MKL_PATH)/libmkl_scalapack_lp64.a $(BLACS)
 
 #-----------------------------------------------------------------------
+# libraries
+#-----------------------------------------------------------------------
 
 LIB     = -L../vasp.5.lib -ldmy  \
       ../vasp.5.lib/linpack_double.o \
+      $(SCA) $(LAPACK) $(BLAS)
+
+#-----------------------------------------------------------------------
+# parallel FFT
+#-----------------------------------------------------------------------
+
 # FFT: fftmpi.o with fft3dlib of Juergen Furthmueller
+#FFT3D   = fftmpi.o fftmpi_map.o fft3dfurth.o fft3dlib.o 
+
 # alternatively: fftw.3.1.X is slighly faster and should be used if available
+#FFT3D   = fftmpiw.o fftmpi_map.o fftw3d.o fft3dlib.o  /opt/libs/fftw-3.1.2/lib/libfftw3.a
 
 # you may also try to use the fftw wrapper to mkl (but the path might vary a lot)
 # it seems this is best for AMD based systems
+#FFT3D   = fftmpiw.o fftmpi_map.o  fftw3d.o  fft3dlib.o   $(MKL_FFTW_PATH)/libfftw3xf_intel.a
 #INCS = -I$(MKLROOT)/include/fftw 
 
+MKLROOT=/HOME/intel/composer_xe_2013_sp1.2.144/mkl
+#BLAS= /usr/GotoBLAS/GotoBLAS2/libgoto2.a
+BLAS= -L$(MKLROOT)/mkl/lib/intel64 -lmkl_intel_lp64  -lmkl_sequential -lmkl_core -lpthread
+LAPACK= -L$(MKLROOT)/mkl/lib/intel64 -lmkl_intel_lp64  -lmkl_sequential -lmkl_core -lpthread
+SCA= $(MKLROOT)/lib/intel64/libmkl_scalapack_lp64.a $(MKLROOT)/lib/intel64/libmkl_blacs_intelmpi_lp64.a
 
+FFT3D   = fftmpiw.o fftmpi_map.o fftw3d.o fft3dlib.o  /WORK/app/fftw/3.3.4/lib/libfftw3f_mpi.a
 INCS = -I/WORK/app/fftw/3.3.4/include
 
 #-----------------------------------------------------------------------
-BASIC=   symmetry.o symlib.o   lattlib.o  random.o
+# general rules and compile lines
+#-----------------------------------------------------------------------
+BASIC=   symmetry.o symlib.o   lattlib.o  random.o   
+
+
+SOURCE=  base.o     mpi.o      smart_allocate.o      xml.o  \
+         constant.o jacobi.o   main_mpi.o  scala.o   \
+         asa.o      lattice.o  poscar.o   ini.o  mgrid.o  xclib.o  vdw_nl.o  xclib_grad.o \
+         radial.o   pseudo.o   gridq.o     ebs.o  \
+         mkpoints.o wave.o     wave_mpi.o  wave_high.o  spinsym.o \
          $(BASIC)   nonl.o     nonlr.o    nonl_high.o dfast.o    choleski2.o \
          mix.o      hamil.o    xcgrad.o   xcspin.o    potex1.o   potex2.o  \
          constrmag.o cl_shift.o relativistic.o LDApU.o \
+         paw_base.o metagga.o  egrad.o    pawsym.o   pawfock.o  pawlhf.o   rhfatm.o  hyperfine.o paw.o   \
+         mkpoints_full.o       charge.o   Lebedev-Laikov.o  stockholder.o dipol.o    pot.o \
          dos.o      elf.o      tet.o      tetweight.o hamil_rot.o \
          chain.o    dyna.o     k-proj.o    sphpro.o    us.o  core_rel.o \
          aedens.o   wavpre.o   wavpre_noio.o broyden.o \
+         dynbr.o    hamil_high.o  rmm-diis.o reader.o   writer.o   tutor.o xml_writer.o \
          brent.o    stufak.o   fileio.o   opergrid.o stepver.o  \
+         chgloc.o   fast_aug.o fock_multipole.o  fock.o  mkpoints_change.o sym_grad.o \
+         mymath.o   internals.o npt_dynamics.o   dynconstr.o dimer_heyden.o dvvtrajectory.o subdftd3.o \
+         vdwforcefield.o nmr.o      pead.o     subrot.o   subrot_scf.o  paircorrection.o \
+         force.o    pwlhf.o    gw_model.o optreal.o  steep.o    davidson.o  david_inner.o \
          electron.o rot.o  electron_all.o shm.o    pardens.o  \
          optics.o   constr_cell_relax.o   stm.o    finite_diff.o elpol.o    \
          hamil_lr.o rmm-diis_lr.o  subrot_cluster.o subrot_lr.o \
          lr_helper.o hamil_lrf.o   elinear_response.o ilinear_response.o \
+         linear_optics.o \
+         setlocalpp.o  wannier.o electron_OEP.o electron_lhf.o twoelectron4o.o \
          gauss_quad.o m_unirnk.o minimax_tabs.o minimax.o \
          mlwf.o     ratpol.o screened_2e.o wave_cacher.o chi_base.o wpot.o \
          local_field.o ump2.o ump2kpar.o fcidump.o ump2no.o \
          bse_te.o bse.o acfdt.o chi.o sydmat.o \
          lcao_bare.o wnpr.o dmft.o \
+         rmm-diis_mlr.o  linear_response_NMR.o wannier_interpol.o linear_response.o  auger.o getshmem.o \
          dmatrix.o
 
-vasp: $(SOURCE) $(FFT3D) $(INC) main.o
-        rm -f vasp
-        $(FCL) -o vasp main.o  $(SOURCE)   $(FFT3D) $(LIB) $(LINK)
+vasp: $(SOURCE) $(FFT3D) $(INC) main.o 
+	rm -f vasp
+	$(FCL) -o vasp main.o  $(SOURCE)   $(FFT3D) $(LIB) $(LINK)
 makeparam: $(SOURCE) $(FFT3D) makeparam.o main.F $(INC)
-        $(FCL) -o makeparam  $(LINK) makeparam.o $(SOURCE) $(FFT3D) $(LIB)
+	$(FCL) -o makeparam  $(LINK) makeparam.o $(SOURCE) $(FFT3D) $(LIB)
 zgemmtest: zgemmtest.o base.o random.o $(INC)
-        $(FCL) -o zgemmtest $(LINK) zgemmtest.o random.o base.o $(LIB)
+	$(FCL) -o zgemmtest $(LINK) zgemmtest.o random.o base.o $(LIB)
 dgemmtest: dgemmtest.o base.o random.o $(INC)
-        $(FCL) -o dgemmtest $(LINK) dgemmtest.o random.o base.o $(LIB) 
+	$(FCL) -o dgemmtest $(LINK) dgemmtest.o random.o base.o $(LIB) 
 ffttest: base.o smart_allocate.o mpi.o mgrid.o random.o ffttest.o $(FFT3D) $(INC)
+	$(FCL) -o ffttest $(LINK) ffttest.o mpi.o mgrid.o random.o smart_allocate.o base.o $(FFT3D) $(LIB)
 kpoints: $(SOURCE) $(FFT3D) makekpoints.o main.F $(INC)
-        $(FCL) -o kpoints $(LINK) makekpoints.o $(SOURCE) $(FFT3D) $(LIB)
+	$(FCL) -o kpoints $(LINK) makekpoints.o $(SOURCE) $(FFT3D) $(LIB)
 
-clean:  
-        -rm -f *.g *.f *.o *.L *.mod ; touch *.F
+clean:	
+	-rm -f *.g *.f *.o *.L *.mod ; touch *.F
 
 main.o: main$(SUFFIX)
-        $(FC) $(FFLAGS)$(DEBUG)  $(INCS) -c main$(SUFFIX)
+	$(FC) $(FFLAGS)$(DEBUG)  $(INCS) -c main$(SUFFIX)
 xcgrad.o: xcgrad$(SUFFIX)
-        $(FC) $(FFLAGS) $(INLINE)  $(INCS) -c xcgrad$(SUFFIX)
+	$(FC) $(FFLAGS) $(INLINE)  $(INCS) -c xcgrad$(SUFFIX)
 xcspin.o: xcspin$(SUFFIX)
-        $(FC) $(FFLAGS) $(INLINE)  $(INCS) -c xcspin$(SUFFIX)
+	$(FC) $(FFLAGS) $(INLINE)  $(INCS) -c xcspin$(SUFFIX)
 
 makeparam.o: makeparam$(SUFFIX)
-        $(FC) $(FFLAGS)$(DEBUG)  $(INCS) -c makeparam$(SUFFIX)
+	$(FC) $(FFLAGS)$(DEBUG)  $(INCS) -c makeparam$(SUFFIX)
 
-makeparam$(SUFFIX): makeparam.F main.F
+makeparam$(SUFFIX): makeparam.F main.F 
 #
 # MIND: I do not have a full dependency list for the include
 # and MODULES: here are only the minimal basic dependencies
@@ -308,62 +356,62 @@ nonl.o: nonl.inc nonl.F
 nonlr.o: nonlr.inc nonlr.F
 
 $(OBJ_HIGH):
-        $(CPP)
-        $(FC) $(FFLAGS) $(OFLAG_HIGH) $(INCS) -c $*$(SUFFIX)
+	$(CPP)
+	$(FC) $(FFLAGS) $(OFLAG_HIGH) $(INCS) -c $*$(SUFFIX)
 $(OBJ_NOOPT):
-        $(CPP)
-        $(FC) $(FFLAGS) $(INCS) -c $*$(SUFFIX)
+	$(CPP)
+	$(FC) $(FFLAGS) $(INCS) -c $*$(SUFFIX)
 
 fft3dlib_f77.o: fft3dlib_f77.F
-        $(CPP)
-        $(F77) $(FFLAGS_F77) -c $*$(SUFFIX)
+	$(CPP)
+	$(F77) $(FFLAGS_F77) -c $*$(SUFFIX)
 
 .F.o:
-        $(CPP)
-        $(FC) $(FFLAGS) $(OFLAG) $(INCS) -c $*$(SUFFIX)
+	$(CPP)
+	$(FC) $(FFLAGS) $(OFLAG) $(INCS) -c $*$(SUFFIX)
 .F$(SUFFIX):
-        $(CPP)
+	$(CPP)
 $(SUFFIX).o:
-        $(FC) $(FFLAGS) $(OFLAG) $(INCS) -c $*$(SUFFIX)
+	$(FC) $(FFLAGS) $(OFLAG) $(INCS) -c $*$(SUFFIX)
 
 # special rules
 #-----------------------------------------------------------------------
 # these special rules have been tested for ifc.11 and ifc.12 only
 
 fft3dlib.o : fft3dlib.F
-        $(CPP)
-        $(FC) -FR -lowercase -O2 -c $*$(SUFFIX)
+	$(CPP)
+	$(FC) -FR -lowercase -O2 -c $*$(SUFFIX)
 fft3dfurth.o : fft3dfurth.F
-        $(CPP)
-        $(FC) -FR -lowercase -O1 -c $*$(SUFFIX)
+	$(CPP)
+	$(FC) -FR -lowercase -O1 -c $*$(SUFFIX)
 fftw3d.o : fftw3d.F
-        $(CPP)
-        $(FC) -FR -lowercase -O1 $(INCS) -c $*$(SUFFIX)
+	$(CPP)
+	$(FC) -FR -lowercase -O1 $(INCS) -c $*$(SUFFIX)
 fftmpi.o : fftmpi.F
-        $(CPP)
-        $(FC) -FR -lowercase -O1 -c $*$(SUFFIX)
+	$(CPP)
+	$(FC) -FR -lowercase -O1 -c $*$(SUFFIX)
 fftmpiw.o : fftmpiw.F
-        $(CPP)
-        $(FC) -FR -lowercase -O1 $(INCS) -c $*$(SUFFIX)
+	$(CPP)
+	$(FC) -FR -lowercase -O1 $(INCS) -c $*$(SUFFIX)
 wave_high.o : wave_high.F
-        $(CPP)
-        $(FC) -FR -lowercase -O1 -c $*$(SUFFIX)
+	$(CPP)
+	$(FC) -FR -lowercase -O1 -c $*$(SUFFIX)
 # the following rules are probably no longer required (-O3 seems to work)
 wave.o : wave.F
-        $(CPP)
-        $(FC) -FR -lowercase -O2 -c $*$(SUFFIX)
+	$(CPP)
+	$(FC) -FR -lowercase -O2 -c $*$(SUFFIX)
 paw.o : paw.F
-        $(CPP)
-        $(FC) -FR -lowercase -O1 -c $*$(SUFFIX)
+	$(CPP)
+	$(FC) -FR -lowercase -O1 -c $*$(SUFFIX)
 cl_shift.o : cl_shift.F
-        $(CPP)
-        $(FC) -FR -lowercase -O2 -c $*$(SUFFIX)
+	$(CPP)
+	$(FC) -FR -lowercase -O2 -c $*$(SUFFIX)
 us.o : us.F
-        $(CPP)
-        $(FC) -FR -lowercase -O1 -c $*$(SUFFIX)
+	$(CPP)
+	$(FC) -FR -lowercase -O1 -c $*$(SUFFIX)
 LDApU.o : LDApU.F
-        $(CPP)
-        $(FC) -FR -lowercase -O2 -c $*$(SUFFIX)
-  
+	$(CPP)
+	$(FC) -FR -lowercase -O2 -c $*$(SUFFIX)
+
   $ make
 ```
