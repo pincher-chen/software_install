@@ -172,6 +172,7 @@ LAPACK     =-L$(MKL_PATH) -lmkl_intel_lp64 -lmkl_sequential -lmkl_core -lpthread
 #BLACS      = -lmkl_blacs_intelmpi_lp64
 BLACS      =-L$(MKL_PATH) -lmkl_blacs_intelmpi_lp64 -lmkl_blacs_openmpi_lp64
 SCALAPACK  = $(MKL_PATH)/libmkl_scalapack_lp64.a $(MKL_PATH)/libmkl_scalapack_ilp64.a $(BLACS)
+OBJECTS    = fftmpiw.o fftmpi_map.o fftw3d.o fft3dlib.o /WORK/app/fftw/3.3.4/lib/libfftw3_mpi.a
  
  
 INCS       =-I/WORK/app/fftw/3.3.4-double/include
