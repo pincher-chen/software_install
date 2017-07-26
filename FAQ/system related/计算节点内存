@@ -1,3 +1,50 @@
 天河系统的常规的计算节点内存是64G,同时也支持128G，甚至3T、6T的胖节点。
 对于材料模拟领域，量化类软件容易出现内存溢出的情况，即内存使用量超过指定节点内存。
-所以建议在调试阶段，需要对自己程序的消耗情况，要有所了解。
+所以建议在调试阶段，需要对自己程序的消耗情况，要有所了解。可以通过下面方法查看内存使用情况：
+···
+[nscc-gz_pinchen@ln0%tianhe2-C ~]$ cat run_job.sh 
+#!/bin/sh
+yhrun -N 2 -n 24 vasp
+[nscc-gz_pinchen@ln0%tianhe2-C ~]$ yhbatch -N 2 run_job.sh 
+Submitted batch job 1690210
+[nscc-gz_pinchen@ln0%tianhe2-C ~]$ yhq
+             JOBID PARTITION     NAME         USER ST       TIME  NODES NODELIST(REASON)
+           1690210      work run_job. nscc-gz_pinc  R       0:16      2 cn[6237,6603]
+[nscc-gz_pinchen@cn6237%tianhe2-C ~]$ free -g
+             total       used       free     shared    buffers     cached
+Mem:            63          8         54          0          0          1
+-/+ buffers/cache:          7         55
+Swap:            0          0          0
+
+···
+那么对于该示例中可以看出，cn6237节点总内存为63G，vasp在该节点调用内存为8G，还有54G内存可用，表示安全。另外也可以查看一下节点是否有vasp计算进程，
+可通过下面命令查看：
+···
+[nscc-gz_pinchen@cn6237%tianhe2-C ~]$ top
+top - 17:11:36 up 2 days,  7:29,  1 user,  load average: 9.36, 9.39, 15.99
+Tasks: 458 total,  13 running, 445 sleeping,   0 stopped,   0 zombie
+Cpu(s): 84.0%us,  0.5%sy,  0.0%ni, 15.5%id,  0.0%wa,  0.0%hi,  0.0%si,  0.0%st
+Mem:  66085416k total,  9146940k used, 56938476k free,        0k buffers
+Swap:        0k total,        0k used,        0k free,  1064908k cached
+
+  PID USER      PR  NI  VIRT  RES  SHR S %CPU %MEM    TIME+  COMMAND                         
+30112 nscc-gz_  20   0  821m 592m  46m R 99.5  0.9   1:25.84 vasp                             
+30114 nscc-gz_  20   0  783m 531m  21m R 99.5  0.8   1:26.71 vasp                             
+30116 nscc-gz_  20   0  783m 530m  21m R 99.5  0.8   1:26.72 vasp                             
+30119 nscc-gz_  20   0  783m 531m  21m R 99.5  0.8   1:26.73 vasp                             
+30121 nscc-gz_  20   0  783m 531m  21m R 99.5  0.8   1:26.73 vasp                             
+30123 nscc-gz_  20   0  784m 531m  20m R 99.5  0.8   1:26.75 vasp                             
+30113 nscc-gz_  20   0  783m 530m  20m R 97.6  0.8   1:26.70 vasp                             
+30115 nscc-gz_  20   0  783m 531m  22m R 97.6  0.8   1:26.70 vasp                             
+30117 nscc-gz_  20   0  783m 531m  21m R 97.6  0.8   1:26.69 vasp                             
+30118 nscc-gz_  20   0  783m 531m  21m R 97.6  0.8   1:26.66 vasp                             
+30120 nscc-gz_  20   0  783m 531m  21m R 97.6  0.8   1:26.71 vasp                             
+30122 nscc-gz_  20   0  783m 531m  21m R 97.6  0.8   1:26.72 vasp                             
+30580 nscc-gz_  20   0 23456 1932 1328 R  2.0  0.0   0:00.01 top                              
+    1 root      20   0 10616  868  744 S  0.0  0.0   0:34.34 init                             
+    2 root      20   0     0    0    0 S  0.0  0.0   0:00.01 kthreadd                         
+    3 root      RT   0     0    0    0 S  0.0  0.0   0:00.56 migration/0                      
+    4 root      20   0     0    0    0 S  0.0  0.0   0:00.35 ksoftirqd/0  
+···
+
+如果计算节点的内存接近64G，则需要小心，此时建议多申请节点，即增大N参数。
