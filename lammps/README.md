@@ -1,57 +1,57 @@
 
-====== LAMMPS ======
+# LAMMPS 
 
 
 
-===== 1.简介 =====
+## 1.简介 
 Large-scale Atomic/Molecular Massively Parallel Simulator（LAMMPS），经典分子动力学软件包。可以对在液态、固态或者气态的状态下的粒子系综进行建模，可以建模原子、有机分子、生物分子、金属或者粗粒子系统，可以在不同的力场和边界条件下进行系统建模。
 
-===== 2.使用方法 =====
+## 2.使用方法 
 
 
 加载方法：
-<code make>
+```
 module ava #查看所有软件
 module load lammps$TAB键  
 module load lammps/17Feb16 #加载软件
 module list #查看已安装的软件
 module unload lammps/9Dec14-mic
 module help lammps/17Feb16 #查看所安装的包
-</code>
+```
 
 任务提交脚本：
-<code bash>
+```
 ##job.sh
 #！/bin/bash
 
 yhrun -N 1 -n 24 lmp_intel_cpu < in.test
-</code>
+```
 
 任务提交命令：
-<code make>
+```
 yhbatch -p training -N 1 -n 24 ./job.sh
-</code>
+```
 
 ===== 3.编译方法 =====
 
 **step 1**:选择编译包 \\
-<code bash>
+```
 cp  /WORK/app/share/lammps-17Feb16.tar.gz . 
 tar xvf lammps-17Feb16.tar.gz
 cd lammps-17Feb16/src
 make package-status
-</code> 
-如有必要，需先编译lib文件夹下的库文件 \\ 
-<code make>
+``` 
+如有必要，需先编译lib文件夹下的库文件 
+```
 make yes-ASPHERE yes-CLASS2 yes-KSPACE yes-MPIIO yes-USER-OMP yes-USER-SPH
-</code>
+```
 
 **step 1**直接拷贝： \\ 
-<code make>
+```
  cp /WORK/app/lammps/17Feb16/Makefile.intel_cpu src/MAKE
-</code>
+```
 或修改Makefile.intel_cpu文件，对于atomistica的makefile.intel_cpu_atomistica参考(注意下面atomistica的实际路径根据自己的路径进行修改)：
-<code make>
+```
 # intel_cpu = USER-INTEL package with CPU optimizations, Intel MPI, MKL FFT
 
 SHELL = /bin/sh
@@ -169,10 +169,10 @@ shlib:	$(OBJ)
 
 DEPENDS = $(OBJ:.o=.d)
 sinclude $(DEPENDS)
-</code>
+```
 
 如果是Makefile.intel_cpu，则参考:
-<code make>
+```
 # intel_cpu = USER-INTEL package with CPU optimizations, Intel MPI, MKL FFT
 
 SHELL = /bin/sh
@@ -291,10 +291,10 @@ shlib:	$(OBJ)
 DEPENDS = $(OBJ:.o=.d)
 sinclude $(DEPENDS)
 
-</code>
+```
 
 **step 3**:编译
-<code make>
+```
 nohup make intel_cpu_atomistica >& make.log &  #对于cpu版，则根据make后缀为make intel_cpu 
 tail -f make.log  #查看编译过程
-</code>
+```
