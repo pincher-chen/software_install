@@ -34,7 +34,7 @@ yhbatch -p training -N 1 -n 24 ./job.sh
 
 ===== 3.编译方法 =====
 
-**step 1**:选择编译包 \\
+**step 1**:选择编译包 
 ```
 cp  /WORK/app/share/lammps-17Feb16.tar.gz . 
 tar xvf lammps-17Feb16.tar.gz
@@ -46,7 +46,7 @@ make package-status
 make yes-ASPHERE yes-CLASS2 yes-KSPACE yes-MPIIO yes-USER-OMP yes-USER-SPH
 ```
 
-**step 1**直接拷贝： \\ 
+**step 1**直接拷贝： 
 ```
  cp /WORK/app/lammps/17Feb16/Makefile.intel_cpu src/MAKE
 ```
