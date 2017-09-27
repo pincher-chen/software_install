@@ -10,6 +10,7 @@ Submitted batch job 1690210
 [nscc-gz_pinchen@ln0%tianhe2-C ~]$ yhq
              JOBID PARTITION     NAME         USER ST       TIME  NODES NODELIST(REASON)
            1690210      work run_job. nscc-gz_pinc  R       0:16      2 cn[6237,6603]
+[nscc-gz_pinchen@ln0%tianhe2-C ~]$ ssh cn6237
 [nscc-gz_pinchen@cn6237%tianhe2-C ~]$ free -g
              total       used       free     shared    buffers     cached
 Mem:            63          8         54          0          0          1
