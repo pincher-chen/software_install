@@ -158,7 +158,8 @@ CPP        = fpp -f_com=no -free -w0  $*$(FUFFIX) $*$(SUFFIX) $(CPP_OPTIONS)
 FC         = mpif90
 FCL        = mpif90 -mkl=sequential -lstdc++
  
-FREE       = -free -names lowercase
+#FREE       = -free -names lowercase
+FREE        = -free -heap-arrays 
  
 FFLAGS     = -assume byterecl -w
 OFLAG      = -O2
