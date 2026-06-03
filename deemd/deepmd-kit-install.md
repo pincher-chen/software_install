@@ -97,43 +97,94 @@ LAMMPS `src2` 目录中需包含 deepmd 提供的 pair/fix/compute 源文件
 (`pair_deepmd.*`、`pair_deepspin.*`、`fix_dplr.*`、`compute_deeptensor_atom.*`、`pppm_dplr.*` 等)。
 本环境已放置在 `src2/` 及 `src2/USER-DEEPMD/`。
 
-### 2.2 配置 `Makefile.package` 指向 libdeepmd_c_pt
+### 2.2 修复 voronoi 库配置(本环境需要)
+
+本环境的 voronoi 库配置有两处错误会导致链接失败,需先修复:
+
+(1) 文件 `…/lib/voronoi/Makefile.lammps`:把三个变量清空(原值是缺少 `-I/-L` 前缀的裸路径,
+会被当成输入文件喂给链接器,报 `file format not recognized`):
+
+```make
+voronoi_SYSINC =
+voronoi_SYSLIB =
+voronoi_SYSPATH =
+```
+
+(2) `…/lib/voronoi/liblink` 符号链接应指向**目录**而非 `.a` 文件
+(否则 `-L liblink` 失效,报 `cannot find -lvoro++`):
+
+```bash
+cd …/lib/voronoi
+rm -f liblink && ln -s ./voro++/lib liblink   # 指向目录,内含 libvoro++.a
+```
+
+### 2.3 配置 `Makefile.package` 指向 libdeepmd_c_pt
 
 文件:`…/software/lammps-stable_29Aug2024_update1/src2/Makefile.package`
 
 ```make
 PKG_INC = -I../../lib/voronoi/includelink -I../../lib/plumed/includelink \
           -DLAMMPS_VERSION_NUMBER=20240829 \
-          -I/HOME/nscc-gz/nscc-gz_pinchen3/XYFS01_HDD_POOL/software/libdeepmd_c_pt/include/ \
+          -I/HOME/.../software/libdeepmd_c_pt/include/ \
           -I.../lib/plumed/include/
 
 PKG_PATH = -L../../lib/voronoi/liblink \
-           -L/HOME/nscc-gz/nscc-gz_pinchen3/XYFS01_HDD_POOL/software/libdeepmd_c_pt/lib \
+           -L/HOME/.../software/libdeepmd_c_pt/lib \
+           -L/GLOBALFS/nscc-gz_pinchen3/anaconda3/envs/deepmd203/lib/python3.9/site-packages/torch/lib \
            -L/usr/local/mpi_glex/mpich4.1.2_ch3_gcc11.4.0_shared/lib \
            -L.../lib/plumed/lib
 
-PKG_LIB = -lvoro++ -Wl,--no-as-needed -ldeepmd_c \
-          -Wl,-rpath=/HOME/nscc-gz/nscc-gz_pinchen3/XYFS01_HDD_POOL/software/libdeepmd_c_pt/lib
+PKG_LIB = -lvoro++ -Wl,--no-as-needed -ldeepmd_c -ldeepmd_cc \
+          -Wl,-rpath-link,/GLOBALFS/.../torch/lib \
+          -Wl,-rpath=/HOME/.../software/libdeepmd_c_pt/lib \
+          -Wl,-rpath=/GLOBALFS/.../torch/lib
 ```
 
-**关键点:**
-- 链接期只需 `-ldeepmd_c`(对应 `libdeepmd_c.so`)。
+**关键点(本环境踩坑总结):**
+- **必须同时链接 `-ldeepmd_c -ldeepmd_cc`**:`DipoleChargeModifier::compute<T>` 等符号在
+  `libdeepmd_c.so` 中是未定义(U),由 `libdeepmd_cc.so` 提供(弱符号 W)。ld 不会用"间接
+  NEEDED 库的弱符号"补 U,因此 `libdeepmd_cc.so` 必须显式出现在链接行,否则报
+  `undefined reference to deepmd::DipoleChargeModifier::compute<double>`。
+- **必须给 torch 库目录加 `-L` 和 `-Wl,-rpath-link`**:`libdeepmd_cc.so` 依赖
+  `libc10/libtorch_cpu/libtorch`,链接期 ld 需要能找到它们才能完整解析。
 - **不要** 把 `libdeepmd_op_pt.so` 写进 `-l`:它不是链接期依赖,而是 deepmd 运行时用
   `dlopen("libdeepmd_op_pt.so")`(裸文件名)动态加载的。写进去反而会链接失败。
-- `-Wl,-rpath=…/libdeepmd_c_pt/lib` 把库路径写入可执行文件,运行时优先到此处找
-  `libdeepmd_c.so` / `libdeepmd_cc.so`。
+- `-Wl,-rpath=…` 把 deepmd 库目录和 torch 库目录写入可执行文件,运行时优先到此处查找。
 
-### 2.3 编译
+### 2.4 编译
+
+**⚠️ 编译时务必不要激活 conda 环境(关键!)**
+
+构建阶段**不需要** conda(torch 库在 `Makefile.package` 里是绝对路径引用)。若激活了 conda
+(如 `deepmd203`),conda 的 `bin` 会排在 PATH 最前,用 conda 自带的旧工具链
+(`x86_64-conda_cos6-linux-gnu-c++`)和 conda 的 `ld`,**无法解析 `libdeepmd_cc.so` 的弱符号**,
+报一连串 `undefined reference to deepmd::DeepPot::compute / DeepTensor::compute /
+DipoleChargeModifier::compute / read_file_to_string`。
+
+正确做法 —— 退出 conda,只保留 module:
 
 ```bash
-conda activate deepmd203
+conda deactivate            # 提示符还有 (xxx) 就再 deactivate,直到完全退出
+module list                 # 确认: intel/oneapi2023.2_noimpi + mpi/mpich/4.1.2-icc-oneapi2023.2-ch4
+which mpicxx                # 必须是 /APP/.../mpich-4.1.2-icc-oneapi2023.2-ch4/bin/mpicxx
+which ld                    # 必须是 /usr/bin/ld(不能是 conda 里的)
 cd /HOME/nscc-gz/nscc-gz_pinchen3/XYFS01_HDD_POOL/software/lammps-stable_29Aug2024_update1/src2
 make -j32 intel_cpu_mpich
 ```
 
-生成的可执行文件:`lmp_intel_cpu_mpich`。
+生成的可执行文件:`src2/lmp_intel_cpu_mpich`(约 16 MB)。
 
-### 2.4 校验链接
+> 对照:
+> - conda 的 `mpicxx -show` → `x86_64-conda_cos6-linux-gnu-c++ …`(❌ 链接失败)
+> - 模块的 `mpicxx -show` → `icpc -fPIC …`(✓ 配 `/usr/bin/ld` 链接成功)
+>
+> 若 `mpicxx` 解析成 `/usr/bin/mpicxx`(系统 OpenMPI),则会用 g++ 报
+> `unrecognized command-line option '-cxx=icc'`;须确保 PATH 中 mpicxx 来自上述 icc 版 mpich。
+>
+> 运行阶段才用 conda 的 torch:`source env_lammps_pt.sh` 设好 `LD_LIBRARY_PATH` 即可,
+> 运行不经过 ld,不受影响。
+
+### 2.5 校验链接
 
 ```bash
 ldd lmp_intel_cpu_mpich | grep -iE "deepmd|torch"
@@ -149,11 +200,21 @@ torch (`libc10/libtorch_cpu/libtorch`),**运行 LAMMPS 前必须设置 `LD_LIBRA
 同时包含 deepmd 库目录与 torch 库目录:
 
 ```bash
+module load intel/oneapi2023.2_noimpi mpi/mpich/4.1.2-icc-oneapi2023.2-ch4
 conda activate deepmd203
-export LD_LIBRARY_PATH=/HOME/nscc-gz/nscc-gz_pinchen3/XYFS01_HDD_POOL/software/libdeepmd_c_pt/lib:/GLOBALFS/nscc-gz_pinchen3/anaconda3/envs/deepmd203/lib/python3.9/site-packages/torch/lib:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=\
+/HOME/nscc-gz/nscc-gz_pinchen3/XYFS01_HDD_POOL/software/libdeepmd_c_pt/lib:\
+/GLOBALFS/nscc-gz_pinchen3/anaconda3/envs/deepmd203/lib/python3.9/site-packages/torch/lib:\
+/HOME/nscc-gz/nscc-gz_pinchen3/XYFS01_HDD_POOL/software/lammps-stable_29Aug2024_update1/lib/plumed/lib:\
+$LD_LIBRARY_PATH
 ```
 
-建议把上面两行写进作业脚本或 `~/.bashrc`。
+三个路径分别提供:deepmd 库(含 `libdeepmd_op_pt.so`)、PyTorch 库、PLUMED 库
+(`libplumed.so`/`libplumedKernel.so`)。建议把上面几行写进作业脚本或 `~/.bashrc`。
+
+> **重要**:LAMMPS 是 MPICH-ch4 版本,必须通过 `mpirun`/调度器(srun 等)启动,
+> **不能在登录节点直接** `./lmp_intel_cpu_mpich`(会在 `MPI_Init` 初始化网络 fabric 时卡住)。
+> 例如:`mpirun -np 4 ./lmp_intel_cpu_mpich -in in.lammps`
 
 LAMMPS 输入文件中调用 PyTorch 模型的写法示例:
 
@@ -172,8 +233,13 @@ pair_coeff  * *
 |------|------|
 | CMake 报 `Caffe2: CUDA cannot be found` | torch 为 CUDA 版,但无 CUDA 库。改装 CPU 版 torch,或指定 `CUDA_TOOLKIT_ROOT_DIR`。 |
 | 编译报 `catastrophic error: cannot open source file "dump.h"` | LAMMPS `src/src2` 缺核心 dump 文件。从同版本干净源码补回 `dump*.{cpp,h}`、`read_dump.*`、`write_dump.*` 共 26 个核心文件。 |
-| 运行报算子未注册 / 找不到 `libdeepmd_op_pt.so` | 未设置 `LD_LIBRARY_PATH`,见第三步。 |
-| `icc: warning #10145: no action performed for file '…/voro++'` | `lib/voronoi/Makefile.lammps` 里 voro++ 路径少了 `-I`,仅警告,不影响编译。 |
+| 链接报 `cannot find …/voro++/: file format not recognized` | `lib/voronoi/Makefile.lammps` 里 `voronoi_SYSPATH` 是裸目录。清空该文件三个变量,见 2.2。 |
+| 链接报 `cannot find -lvoro++` | `lib/voronoi/liblink` 指向了 `.a` 文件而非目录。改为 `ln -s ./voro++/lib liblink`,见 2.2。 |
+| 链接报 `undefined reference to deepmd::DipoleChargeModifier::compute<double>` | 只链接了 `-ldeepmd_c`。须改为 `-ldeepmd_c -ldeepmd_cc` 并给 torch 库加 `-L`/`-rpath-link`,见 2.3。 |
+| 链接报一连串 `undefined reference to deepmd::DeepPot::compute / DeepTensor::compute / read_file_to_string …` | **激活了 conda**,用了 conda 的旧工具链/ld 解析不了弱符号。`conda deactivate` 后用 module 的 icc-mpich 重新编译,见 2.4。 |
+| 链接报 `g++: unrecognized command-line option '-cxx=icc'` | mpicxx 退回系统 g++。确保 PATH 用 icc 版 mpich 的 mpicxx,见 2.4。 |
+| 运行报算子未注册 / 找不到 `libdeepmd_op_pt.so` / `libplumed.so` | 未设置 `LD_LIBRARY_PATH`,见第三步。 |
+| 登录节点 `./lmp` 卡住无输出 | MPICH-ch4 在 `MPI_Init` 卡在 fabric 初始化。用 `mpirun`/调度器启动。 |
 
 ---
 
@@ -184,8 +250,14 @@ pair_coeff  * *
 ```bash
 #!/bin/bash
 source ~/.bashrc
+module load intel/oneapi2023.2_noimpi mpi/mpich/4.1.2-icc-oneapi2023.2-ch4
 conda activate deepmd203
-export LD_LIBRARY_PATH=/HOME/nscc-gz/nscc-gz_pinchen3/XYFS01_HDD_POOL/software/libdeepmd_c_pt/lib:/GLOBALFS/nscc-gz_pinchen3/anaconda3/envs/deepmd203/lib/python3.9/site-packages/torch/lib:$LD_LIBRARY_PATH
+
+SW=/HOME/nscc-gz/nscc-gz_pinchen3/XYFS01_HDD_POOL/software
+TORCH_LIB=/GLOBALFS/nscc-gz_pinchen3/anaconda3/envs/deepmd203/lib/python3.9/site-packages/torch/lib
+PLUMED_LIB=$SW/lammps-stable_29Aug2024_update1/lib/plumed/lib
+
+export LD_LIBRARY_PATH=$SW/libdeepmd_c_pt/lib:$TORCH_LIB:$PLUMED_LIB:$LD_LIBRARY_PATH
 ```
 
-运行前 `source …/software/env_lammps_pt.sh` 即可。
+运行前 `source …/software/env_lammps_pt.sh`,再用 `mpirun -np N …/src2/lmp_intel_cpu_mpich -in in.lammps` 启动。
